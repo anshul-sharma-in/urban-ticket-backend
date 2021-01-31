@@ -1,8 +1,10 @@
 package com.urban.start.controllers;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -17,6 +19,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -24,6 +27,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.sun.el.stream.Optional;
 import com.urban.start.models.ERole;
 import com.urban.start.models.Movie;
 import com.urban.start.models.Role;
@@ -38,9 +42,6 @@ import com.urban.start.repository.RoleRepository;
 import com.urban.start.repository.UserRepository;
 import com.urban.start.security.jwt.JwtUtils;
 import com.urban.start.security.services.UserDetailsImpl;
-
-
-
 
 @CrossOrigin(origins = "*", maxAge = 3600)
 @RestController
@@ -150,18 +151,15 @@ public class AuthController {
 			movieRequest.getDescription(),movieRequest.getDate(),movieRequest.getTime(),
 			movieRequest.getImage());
 	
-		String strUser = movieRequest.getUser();
-	
-		Set<User> users = new HashSet<>();
-	
+		String strUser = movieRequest.getUser();	
+		Set<User> users = new HashSet<>();	
 		User movieUser = userRepository.findByUsername(strUser)
 			.orElseThrow(() -> new RuntimeException("Error: User Not Found."));
 	
 		users.add(movieUser);
 	
 		movie.setUser(users);
-		movieRepository.save(movie);
-	
+		movieRepository.save(movie);	
 		return ResponseEntity.ok(new MessageResponse("Movie added successfully!"));
 	}
 
@@ -172,11 +170,8 @@ public class AuthController {
 
 
 	@GetMapping("/getmovies/{id}")
-	public ResponseEntity<List<Movie>> getMovieById(@PathVariable Long id) {
+	public ResponseEntity<List<Movie>> getMovieId(@PathVariable Long id) {
 		List<Movie> movies = movieRepository.findAll();
-		System.out.println(movies);
-		// return ResponseEntity.ok(movies);
-		// Set<User> usersid = new HashSet<User>();
 		
 		List<Movie> selectedmovies = new ArrayList<Movie>();
 		
@@ -192,9 +187,72 @@ public class AuthController {
 		return ResponseEntity.ok(selectedmovies);
 	}
 	
+	@GetMapping("/getmovie/{id}")
+	public ResponseEntity<java.util.Optional<Movie>> getMovieById(@PathVariable Long id){
+		java.util.Optional<Movie> movie = movieRepository.findById(id);
+		
+		return ResponseEntity.ok(movie);
+	}
+	
 	@GetMapping("/getuser/{id}")
 	public ResponseEntity<List<User>> getUserById(@PathVariable Long id) {
 		List<User> users = userRepository.findAll();
 		return ResponseEntity.ok(users);
-}
+	}
+	
+	@DeleteMapping("/deletemovies/{id}")
+	public ResponseEntity<Map<String, Boolean>> deleteMovies(@PathVariable Long id){
+		
+		Movie movie = movieRepository.findById(id)
+				.orElseThrow(() ->new RuntimeException("Error: Movie Not Found."));
+		
+		movieRepository.delete(movie);
+		
+		Map<String, Boolean> response = new HashMap<>();
+		response.put("deleted", Boolean.TRUE);
+		return ResponseEntity.ok(response);
+		
+//		List<Movie> movies = movieRepository.findAll();
+//		
+//		//List<Movie> selectedmovies = new ArrayList<Movie>();
+//		
+//		movies.forEach(data -> {
+//			Set<User> usersid = data.getUser();
+//			usersid.forEach(userdata -> {
+//				if(id == userdata.getId()) {
+//					movieRepository.delete(data);
+//					//selectedmovies.add(data);
+//				}
+//			});	
+//		});
+	}
+	
+	@GetMapping("/lang/{language}")
+	public ResponseEntity<List<Movie>> getMovieByLang(@PathVariable String language) {
+		List<Movie> movies = movieRepository.findAll();
+		List<Movie> selectedmovies = new ArrayList<Movie>();
+		movies.forEach(data -> {
+			if(language.equals(data.getLanguage())){
+				System.out.println(language);
+				selectedmovies.add(data);
+			}
+		});
+		
+		return ResponseEntity.ok(selectedmovies);
+	}
+	
+	@GetMapping("/genre/{gen}")
+	public ResponseEntity<List<Movie>> getMovieByGenre(@PathVariable String gen) {
+		List<Movie> movies = movieRepository.findAll();
+		List<Movie> selectedmovies = new ArrayList<Movie>();
+		movies.forEach(data -> {
+			if(gen.equals(data.getGenre())){
+				System.out.println(gen);
+				selectedmovies.add(data);
+			}
+		});
+		
+		return ResponseEntity.ok(selectedmovies);
+	}
+ 
 }
