@@ -11,6 +11,7 @@ public class JwtResponse {
 	private String email;
 	private double mobileno;
 	private List<String> roles;
+	
 	public JwtResponse(String token, Long id, String name, String username, String email, double mobileno,
 			List<String> roles) {
 		super();

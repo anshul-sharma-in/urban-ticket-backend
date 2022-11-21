@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -23,11 +24,15 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
-import com.sun.el.stream.Optional;
+
+
 import com.urban.start.models.ERole;
 import com.urban.start.models.Movie;
 import com.urban.start.models.Role;
@@ -42,6 +47,9 @@ import com.urban.start.repository.RoleRepository;
 import com.urban.start.repository.UserRepository;
 import com.urban.start.security.jwt.JwtUtils;
 import com.urban.start.security.services.UserDetailsImpl;
+import com.urban.start.service.FileUploadService;
+
+
 
 @CrossOrigin(origins = "*", maxAge = 3600)
 @RestController
@@ -64,8 +72,12 @@ public class AuthController {
 
 	@Autowired
 	JwtUtils jwtUtils;
-
-	@PostMapping("/signin")
+	
+	@Autowired
+	FileUploadService fileUploadService;
+	
+	
+	@PostMapping("/signin")	
 	public ResponseEntity<?> authenticateUser(@Valid @RequestBody LoginRequest loginRequest) {
 
 		Authentication authentication = authenticationManager.authenticate(
@@ -87,8 +99,8 @@ public class AuthController {
 												 userDetails.getMobileno(),
 												 roles));
 	}
-
-	@PostMapping("/signup")
+	
+		@PostMapping("/signup")
 	public ResponseEntity<?> registerUser(@Valid @RequestBody SignupRequest signUpRequest) {
 		if (userRepository.existsByUsername(signUpRequest.getUsername())) {
 			return ResponseEntity
@@ -100,6 +112,12 @@ public class AuthController {
 			return ResponseEntity
 					.badRequest()
 					.body(new MessageResponse("Error: Email is already in use!"));
+		}
+		
+		if (userRepository.existsByMobileno(signUpRequest.getMobileno())) {
+			return ResponseEntity
+					.badRequest()
+					.body(new MessageResponse("Error: Mobile is already in use!"));
 		}
 		
 		// Create new user's account
@@ -144,12 +162,13 @@ public class AuthController {
 
 		return ResponseEntity.ok(new MessageResponse("User registered successfully!"));
 	}
-
-	@PostMapping("/addmovies")
-	public ResponseEntity<?> addMovies(@Valid @RequestBody MovieRequest movieRequest) {
+	
+	@PostMapping("/addmovie")
+	public ResponseEntity<?> addMovie(@Valid @RequestBody MovieRequest movieRequest) {
 		Movie movie = new Movie(movieRequest.getName(),movieRequest.getLanguage(),movieRequest.getGenre(),
 			movieRequest.getDescription(),movieRequest.getDate(),movieRequest.getTime(),
 			movieRequest.getImage());
+		
 	
 		String strUser = movieRequest.getUser();	
 		Set<User> users = new HashSet<>();	
@@ -162,15 +181,60 @@ public class AuthController {
 		movieRepository.save(movie);	
 		return ResponseEntity.ok(new MessageResponse("Movie added successfully!"));
 	}
+	
+	@PutMapping("/updatemovie/{id}")
+	public ResponseEntity<?> updatemovie(@PathVariable Long id, @RequestBody MovieRequest movieDetails){
+		
+		Movie movie = movieRepository.findById(id)
+				.orElseThrow(() -> new RuntimeException("Movie not exist with id:" +id));
+		
+		movie.setDate(movieDetails.getDate());
+		movie.setTime(movieDetails.getTime());
+		Movie updatedMovie= movieRepository.save(movie);
+		return ResponseEntity.ok(updatedMovie);
+	}
 
 	@GetMapping("/getmovies")
 	public List<Movie> getAllMovies(){
 		return movieRepository.findAll();
 	}
+	
+	@GetMapping("/getmanagers")
+	public ResponseEntity<List<User>> getAllManagers(){
+		List<User> managers= userRepository.findAll();
+		
+		List<User> selectedmanagers = new ArrayList<User>();
+		
+		managers.forEach(data -> {
+			Set<Role> roleid = data.getRoles();
+			roleid.forEach(roledata -> {
+				if (roledata.getId() == 2) {
+					selectedmanagers.add(data);
+				}
+			});
+		});
+		return ResponseEntity.ok(selectedmanagers);
+	}
+	
+	@GetMapping("/getusers")
+	public ResponseEntity<List<User>> getUsers(){
+		List<User> users= userRepository.findAll();
+		
+		List<User> selectedusers = new ArrayList<User>();
+		
+		users.forEach(data -> {
+			Set<Role> roleid = data.getRoles();
+			roleid.forEach(roledata -> {
+				if (roledata.getId() == 1) {
+					selectedusers.add(data);
+				}
+			});
+		});
+		return ResponseEntity.ok(selectedusers);
+	}
 
-
-	@GetMapping("/getmovies/{id}")
-	public ResponseEntity<List<Movie>> getMovieId(@PathVariable Long id) {
+	@GetMapping("/getmoviesbymanager/{id}")
+	public ResponseEntity<List<Movie>> getMovieByManager(@PathVariable Long id) {
 		List<Movie> movies = movieRepository.findAll();
 		
 		List<Movie> selectedmovies = new ArrayList<Movie>();
@@ -187,21 +251,15 @@ public class AuthController {
 		return ResponseEntity.ok(selectedmovies);
 	}
 	
-	@GetMapping("/getmovie/{id}")
-	public ResponseEntity<java.util.Optional<Movie>> getMovieById(@PathVariable Long id){
-		java.util.Optional<Movie> movie = movieRepository.findById(id);
+	@GetMapping("/getmoviebyid/{id}")
+	public ResponseEntity<Optional<Movie>> getMovieById(@PathVariable Long id) {
+		Optional<Movie> movie = movieRepository.findById(id);
 		
 		return ResponseEntity.ok(movie);
 	}
 	
-	@GetMapping("/getuser/{id}")
-	public ResponseEntity<List<User>> getUserById(@PathVariable Long id) {
-		List<User> users = userRepository.findAll();
-		return ResponseEntity.ok(users);
-	}
-	
-	@DeleteMapping("/deletemovies/{id}")
-	public ResponseEntity<Map<String, Boolean>> deleteMovies(@PathVariable Long id){
+	@DeleteMapping("/deletemoviebyid/{id}")
+	public ResponseEntity<Map<String, Boolean>> deleteMovieById(@PathVariable Long id){
 		
 		Movie movie = movieRepository.findById(id)
 				.orElseThrow(() ->new RuntimeException("Error: Movie Not Found."));
@@ -211,20 +269,43 @@ public class AuthController {
 		Map<String, Boolean> response = new HashMap<>();
 		response.put("deleted", Boolean.TRUE);
 		return ResponseEntity.ok(response);
+
+	}
+	
+	@DeleteMapping("/deletemanagerwithmovies/{id}")
+	public ResponseEntity<Map<String, Boolean>> deleteManagerWithMovies(@PathVariable Long id){
+		List<Movie> movies = movieRepository.findAll();
+		User user = userRepository.findById(id)
+				.orElseThrow(() ->new RuntimeException("Error: User Not Found."));
 		
-//		List<Movie> movies = movieRepository.findAll();
-//		
-//		//List<Movie> selectedmovies = new ArrayList<Movie>();
-//		
-//		movies.forEach(data -> {
-//			Set<User> usersid = data.getUser();
-//			usersid.forEach(userdata -> {
-//				if(id == userdata.getId()) {
-//					movieRepository.delete(data);
-//					//selectedmovies.add(data);
-//				}
-//			});	
-//		});
+		movies.forEach(data -> {
+			Set<User> usersid = data.getUser();
+			usersid.forEach(userdata -> {
+				if(user.getId() == userdata.getId()) {
+					movieRepository.delete(data);
+				}
+			});	
+		});
+		
+		userRepository.delete(user);
+		
+		Map<String, Boolean> response = new HashMap<>();
+		response.put("deleted", Boolean.TRUE);
+		return ResponseEntity.ok(response);
+	}
+
+	@DeleteMapping("/deleteuserbyid/{id}")
+	public ResponseEntity<Map<String, Boolean>> deleteUserById(@PathVariable Long id){
+		
+		User user = userRepository.findById(id)
+				.orElseThrow(() ->new RuntimeException("Error: User Not Found."));
+		
+		userRepository.delete(user);
+		
+		Map<String, Boolean> response = new HashMap<>();
+		response.put("deleted", Boolean.TRUE);
+		return ResponseEntity.ok(response);
+
 	}
 	
 	@GetMapping("/lang/{language}")
@@ -255,4 +336,9 @@ public class AuthController {
 		return ResponseEntity.ok(selectedmovies);
 	}
  
+	@PostMapping("/upload/local")
+	public void uploadLocal(@RequestParam("file")MultipartFile multipartFile)
+	{
+		fileUploadService.uploadToLocal(multipartFile);
+	}
 }
