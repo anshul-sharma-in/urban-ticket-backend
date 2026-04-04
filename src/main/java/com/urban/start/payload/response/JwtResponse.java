@@ -9,10 +9,10 @@ public class JwtResponse {
 	private String name;
 	private String username;
 	private String email;
-	private double mobileno;
+	private String mobileno;
 	private List<String> roles;
 	
-	public JwtResponse(String token, Long id, String name, String username, String email, double mobileno,
+	public JwtResponse(String token, Long id, String name, String username, String email, String mobileno,
 			List<String> roles) {
 		super();
 		this.token = token;
@@ -61,10 +61,10 @@ public class JwtResponse {
 	public void setEmail(String email) {
 		this.email = email;
 	}
-	public double getMobileno() {
+	public String getMobileno() {
 		return mobileno;
 	}
-	public void setMobileno(double mobileno) {
+	public void setMobileno(String mobileno) {
 		this.mobileno = mobileno;
 	}
 	public List<String> getRoles() {

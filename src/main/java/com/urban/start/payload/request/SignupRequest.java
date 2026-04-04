@@ -22,7 +22,7 @@ public class SignupRequest {
 
 	@NotBlank
 	@Size(min = 10, max = 10)
-	private double mobileno;
+	private String mobileno;
 	
 	@NotBlank
 	@Size(min = 6, max = 40)
@@ -54,11 +54,11 @@ public class SignupRequest {
 		this.email = email;
 	}
 
-	public double getMobileno() {
+	public String getMobileno() {
 		return mobileno;
 	}
 
-	public void setMobileno(double mobileno) {
+	public void setMobileno(String mobileno) {
 		this.mobileno = mobileno;
 	}
 

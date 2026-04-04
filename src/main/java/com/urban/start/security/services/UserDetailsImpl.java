@@ -21,7 +21,7 @@ public class UserDetailsImpl implements UserDetails {
 
 	private String email;
 	
-	private double mobileno;
+	private String mobileno;
 	
 	private String name;
 
@@ -31,7 +31,7 @@ public class UserDetailsImpl implements UserDetails {
 	private Collection<? extends GrantedAuthority> authorities;
 
 	public UserDetailsImpl(Long id, String username, String email, String password,
-			double mobileno,String name,
+			String mobileno,String name,
 			Collection<? extends GrantedAuthority> authorities) {
 		this.id = id;
 		this.username = username;
@@ -70,7 +70,7 @@ public class UserDetailsImpl implements UserDetails {
 		return email;
 	}
 
-	public double getMobileno() {
+	public String getMobileno() {
 		return mobileno;
 	}
 

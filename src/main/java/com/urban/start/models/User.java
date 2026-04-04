@@ -40,7 +40,7 @@ public class User {
 	@NotBlank
 	@Size(min = 10, max = 10)
 	@Column(name = "user_phoneNo")
-	private double mobileno;
+	private String mobileno;
 	
 	@NotBlank
 	@Size(max = 120)
@@ -56,7 +56,7 @@ public class User {
 	public User() {
 	}
 
-	public User(String name,String username,String email,double mobileno,String password) {
+	public User(String name,String username,String email,String mobileno,String password) {
 		super();
 		this.name = name;
 		this.username = username;
@@ -93,11 +93,11 @@ public class User {
 		this.email = email;
 	}
 
-	public double getMobileno() {
+	public String getMobileno() {
 		return mobileno;
 	}
 
-	public void setMobileno(double mobileno) {
+	public void setMobileno(String mobileno) {
 		this.mobileno = mobileno;
 	}
 

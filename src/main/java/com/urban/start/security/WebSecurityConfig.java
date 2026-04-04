@@ -19,6 +19,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import com.urban.start.security.jwt.AuthEntryPointJwt;
 import com.urban.start.security.jwt.AuthTokenFilter;
 import com.urban.start.security.services.UserDetailsServiceImpl;
+import org.springframework.boot.CommandLineRunner;
 
 
 @Configuration
@@ -46,7 +47,8 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 	        public void addCorsMappings(CorsRegistry registry) {
 	            registry.addMapping("/**")
 	                    .allowedOrigins("*")
-	                    .allowedMethods("GET", "PUT", "POST", "PATCH", "DELETE", "OPTIONS");
+	                    .allowedMethods("GET", "PUT", "POST", "PATCH", "DELETE", "OPTIONS")
+                    	.allowedHeaders("*");
 	        }
 	    };
 	}
@@ -69,14 +71,25 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
 	@Override
 	protected void configure(HttpSecurity http) throws Exception {
-		http.cors().and().csrf().disable()
-			.exceptionHandling().authenticationEntryPoint(unauthorizedHandler).and()
-			.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS).and()
-			.authorizeRequests().antMatchers("/api/auth/**").permitAll()
-			.antMatchers("/api/test/**").permitAll()
-			.anyRequest().authenticated();
 
-		http.addFilterBefore(authenticationJwtTokenFilter(), UsernamePasswordAuthenticationFilter.class);
+		http.cors().and().csrf().disable()
+			.exceptionHandling()
+				.authenticationEntryPoint(unauthorizedHandler)
+				.and()
+			.sessionManagement()
+				.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+				.and()
+			.authorizeRequests()
+				.antMatchers("/api/auth/**").permitAll()
+				.antMatchers("/api/test/**").permitAll()
+				.antMatchers("/h2-console/**").permitAll()
+				.anyRequest().authenticated();
+
+		// Allow H2 console in iframe
+		http.headers().frameOptions().disable();
+
+		http.addFilterBefore(authenticationJwtTokenFilter(), 
+			UsernamePasswordAuthenticationFilter.class);
 	}
 	
 }
