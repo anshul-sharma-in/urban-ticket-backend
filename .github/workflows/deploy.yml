@@ -3,8 +3,6 @@ name: Backend Deploy
 on:
   push:
     branches: [ main ]
-    paths:
-      - 'urban-ticket-backend/**'
   workflow_dispatch:
 
 jobs:
@@ -21,9 +19,10 @@ jobs:
           java-version: '17'
 
       - name: Build JAR
-        run: |
-          cd urban-ticket-backend
-          ./mvnw clean package -DskipTests
+        run: ./mvnw clean package -DskipTests
+
+      - name: Debug JAR
+        run: ls target
 
       - name: Copy JAR to EC2
         uses: appleboy/scp-action@v0.1.7
