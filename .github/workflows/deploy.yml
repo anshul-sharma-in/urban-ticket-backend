@@ -21,8 +21,9 @@ jobs:
           java-version: '17'
 
       - name: Build JAR
-        run: ./mvnw clean package -DskipTests
-        working-directory: urban-ticket-backend
+        run: |
+          cd urban-ticket-backend
+          ./mvnw clean package -DskipTests
 
       - name: Copy JAR to EC2
         uses: appleboy/scp-action@v0.1.7
